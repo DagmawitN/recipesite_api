@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  password  String
+  name      String?
+  bio       String? // optional profile bio
+  imageUrl  String? // profile picture URL
+  isAdmin   Boolean    @default(false)
+  recipes   Recipe[] // recipes submitted
+  favorites Favorite[] // recipes the user favorited
+  reviews   Review[]
+  recipeRequests  RecipeRequest[]
+
+}
+
+model Recipe {
+  id           String       @id @default(uuid())
+  title        String
+  imageUrl     String?
+  createdAt    DateTime     @default(now())
+  status       RecipeStatus @default(PENDING) // new: admin approval
+  userId       Int
+  user         User         @relation(fields: [userId], references: [id])
+  category     Category     @relation(fields: [categoryId], references: [id])
+  categoryId   Int
+  favoritedBy  Favorite[]
+  ingredients  Ingredient[]
+  instructions Instruction[]
+  reviews      Review[]
+
+}
+model Instruction{
+  id        Int @id @default(autoincrement())
+  step      Json 
+  recipeId  String
+  recipe    Recipe @relation(fields: [recipeId], references: [id])
+}
+model Ingredient {
+  id       Int    @id @default(autoincrement())
+  list     Json
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+}
+
+model Category {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  recipes Recipe[]
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // 1 to 5
+  comment   String   // feedback
+  createdAt DateTime @default(now())
+  userId    Int
+  recipeId  String
+  user      User     @relation(fields: [userId], references: [id])
+  recipe    Recipe   @relation(fields: [recipeId], references: [id])
+
+  @@unique([userId, recipeId]) 
+}
+
+
+model Favorite {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  recipeId String
+  user     User   @relation(fields: [userId], references: [id])
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+
+  @@unique([userId, recipeId]) // one user can favorite a recipe only once
+}
+
+enum RecipeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model RecipeRequest {
+  id           Int        @id @default(autoincrement())
+  title        String
+  imageUrl     String?
+  instructions Json
+  ingredients  Json        // store ingredients as JSON array of objects
+  status       RecipeStatus @default(PENDING)
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id])
+  createdAt    DateTime   @default(now())
+}
+
+
