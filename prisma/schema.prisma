@@ -58,9 +58,10 @@ model Ingredient {
 }
 
 model Category {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  recipes Recipe[]
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  imageUrl  String?
+  recipes   Recipe[]
 }
 
 model Review {

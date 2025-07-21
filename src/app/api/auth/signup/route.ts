@@ -18,14 +18,14 @@ export async function POST(request: Request) {
       email,
       password: hashed,
       name,
-      isAdmin, // ✅ Save admin flag
+      isAdmin, 
     },
   });
 
   const token = signToken({
     id: user.id,
     email: user.email,
-    isAdmin: user.isAdmin, // ✅ reflect actual value
+    isAdmin: user.isAdmin, 
   });
 
   return NextResponse.json({

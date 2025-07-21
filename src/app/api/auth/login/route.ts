@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       email: true,
       name: true,
       password: true,
-      isAdmin: true, // 👈 include isAdmin
+      isAdmin: true, 
     },
   });
 
@@ -26,7 +26,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
-  // 👇 include isAdmin in token
   const token = signToken({ id: user.id, email: user.email, isAdmin: user.isAdmin });
 
   return NextResponse.json({
@@ -35,7 +34,7 @@ export async function POST(request: Request) {
       id: user.id,
       email: user.email,
       name: user.name,
-      isAdmin: user.isAdmin, // 👈 include in response
+      isAdmin: user.isAdmin, 
     },
     token,
   });
