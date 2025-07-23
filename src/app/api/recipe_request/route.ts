@@ -3,17 +3,22 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const { title, imageUrl, instructions, ingredients, userId } = await req.json();
+    const body = await req.json();
+    const { title, imageUrl, instructions, ingredients, userId } = body;
 
+    // Basic validation
     if (!title || !ingredients || !userId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Missing required fields: title, ingredients, or userId' },
+        { status: 400 }
+      );
     }
 
     const request = await prisma.recipeRequest.create({
       data: {
         title,
-        imageUrl,
-        instructions,
+        imageUrl: imageUrl || '', // optional field with fallback
+        instructions: instructions || '', // optional field with fallback
         ingredients,
         userId,
       },
@@ -23,7 +28,9 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error('[POST /api/recipe_request]', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }
-
