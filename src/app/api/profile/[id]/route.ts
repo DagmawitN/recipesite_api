@@ -6,7 +6,7 @@ export async function GET(
   context: { params: { id: string } }
 ) {
   try {
-    const userId = parseInt(context.params.id); 
+    const userId = parseInt(context.params.id);
 
     if (isNaN(userId)) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
@@ -18,6 +18,29 @@ export async function GET(
         id: true,
         email: true,
         name: true,
+
+        recipes: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            imageUrl: true,
+            createdAt: true,
+          },
+        },
+
+        favorites: {
+          select: {
+            recipe: {
+              select: {
+                id: true,
+                title: true,
+                imageUrl: true,
+                status: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -25,7 +48,16 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    // Reformat favorites to extract just the recipe object
+    const favorites = user.favorites.map((fav) => fav.recipe);
+
+    return NextResponse.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      postedRecipes: user.recipes,
+      favoriteRecipes: favorites,
+    });
   } catch (error) {
     console.error('[GET_USER_BY_ID_ERROR]', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

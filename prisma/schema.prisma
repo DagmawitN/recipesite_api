@@ -42,8 +42,9 @@ model Recipe {
   ingredients  Ingredient[]
   instructions Instruction[]
   reviews      Review[]
-
 }
+
+
 model Instruction{
   id        Int @id @default(autoincrement())
   step      Json 
