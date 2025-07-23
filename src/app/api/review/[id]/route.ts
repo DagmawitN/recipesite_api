@@ -17,8 +17,8 @@ export async function GET(
     });
 
     return NextResponse.json(reviews);
-  } catch (error) {
-    console.error('[GET_REVIEWS_ERROR]', error);
+  } catch  {
+    console.error('[GET_REVIEWS_ERROR]');
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

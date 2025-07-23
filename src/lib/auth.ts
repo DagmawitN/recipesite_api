@@ -16,7 +16,7 @@ export function verifyToken(token: string) {
   const secret = process.env.JWT_SECRET || 'your-secret';
   try {
     return jwt.verify(token, secret);
-  } catch (err) {
+  } catch  {
     return null;
   }
 }
