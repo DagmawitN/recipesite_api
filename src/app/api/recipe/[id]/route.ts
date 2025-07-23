@@ -1,10 +1,8 @@
-// File: src/app/api/recipe/[id]/route.ts
-
 import { prisma } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
+import {  NextResponse } from 'next/server';
 
 export async function GET(
-  req: NextRequest,
+  req: Request,
   context: { params: { id: string } }
 ) {
   const recipeId = context.params.id;

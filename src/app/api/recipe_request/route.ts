@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
+import {  NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   const { title, imageUrl, instructions, ingredients, userId } = await req.json();
 
   if (!title || !ingredients || !userId) {
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       title,
       imageUrl,
       instructions,
-      ingredients, // expects array of { name, amount, unit }
+      ingredients, 
       userId,
     },
   });
