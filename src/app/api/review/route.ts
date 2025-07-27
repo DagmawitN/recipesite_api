@@ -1,5 +1,3 @@
-// src/app/api/recipe/[id]/route.ts
-
 import { prisma } from '@/lib/db';
 import {  NextResponse } from 'next/server';
 

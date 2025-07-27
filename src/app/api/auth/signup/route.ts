@@ -1,9 +1,9 @@
 import { prisma } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextResponse , NextRequest} from 'next/server';
 import bcrypt from 'bcrypt';
 import { signToken } from '@/lib/auth';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const { email, password, name, isAdmin = false } = await request.json();
 
   const existing = await prisma.user.findUnique({ where: { email } });

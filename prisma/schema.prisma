@@ -29,19 +29,20 @@ model User {
 }
 
 model Recipe {
-  id           String       @id @default(uuid())
-  title        String
-  imageUrl     String?
-  createdAt    DateTime     @default(now())
-  status       RecipeStatus @default(PENDING) // new: admin approval
-  userId       Int
-  user         User         @relation(fields: [userId], references: [id])
-  category     Category     @relation(fields: [categoryId], references: [id])
-  categoryId   Int
-  favoritedBy  Favorite[]
-  ingredients  Ingredient[]
-  instructions Instruction[]
-  reviews      Review[]
+  id                String       @id @default(uuid())
+  title             String
+  imageUrl          String?
+  createdAt         DateTime     @default(now())
+  status            RecipeStatus @default(PENDING) // new: admin approval
+  userId            Int
+  user              User         @relation(fields: [userId], references: [id])
+  category          Category     @relation(fields: [categoryId], references: [id])
+  categoryId        Int
+  favoritedBy       Favorite[]
+  ingredients       Ingredient[]
+  instructions      Instruction[]
+  reviews           Review[]
+  featuredRecipe    FeaturedRecipe?
 }
 
 
@@ -78,6 +79,13 @@ model Review {
   @@unique([userId, recipeId]) 
 }
 
+model FeaturedRecipe {
+  id                String   @id @default(uuid())
+  recipeId          String   @unique
+  averageRating     Float
+  featuredAt        DateTime @default(now())
+  recipe            Recipe   @relation(fields: [recipeId], references: [id])
+}
 
 model Favorite {
   id       Int    @id @default(autoincrement())
@@ -96,15 +104,16 @@ enum RecipeStatus {
 }
 
 model RecipeRequest {
-  id           Int        @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   title        String
-  imageUrl     String?
+  imageUrl     Bytes
   instructions Json
-  ingredients  Json        // store ingredients as JSON array of objects
+  ingredients  Json        
   status       RecipeStatus @default(PENDING)
   userId       Int
-  user         User       @relation(fields: [userId], references: [id])
-  createdAt    DateTime   @default(now())
+  user         User         @relation(fields: [userId], references: [id])
+  createdAt    DateTime     @default(now())
+  featured     Boolean      @default(false)
 }
 
 

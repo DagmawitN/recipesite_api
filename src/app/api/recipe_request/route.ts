@@ -6,7 +6,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { title, imageUrl, instructions, ingredients, userId } = body;
 
-    // Basic validation
     if (!title || !ingredients || !userId) {
       return NextResponse.json(
         { error: 'Missing required fields: title, ingredients, or userId' },
@@ -17,8 +16,8 @@ export async function POST(req: Request) {
     const request = await prisma.recipeRequest.create({
       data: {
         title,
-        imageUrl: imageUrl || '', // optional field with fallback
-        instructions: instructions || '', // optional field with fallback
+        imageUrl: imageUrl || '', 
+        instructions: instructions || '', 
         ingredients,
         userId,
       },
