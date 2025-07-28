@@ -1,16 +1,21 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromRequest } from '@/lib/getuser'; 
+import { getUserFromRequest } from '@/lib/getuser';
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, context: { params: { id: string } }) {
+  const { id } = context.params;
   const user = await getUserFromRequest(request);
 
   if (!user || !user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const requestId = parseInt(params.id);
+  const requestId = parseInt(id);
+  if (isNaN(requestId)) {
+    return NextResponse.json({ error: 'Invalid request id' }, { status: 400 });
+  }
+
   const { status, categoryId } = await request.json();
 
   if (!['APPROVED', 'REJECTED'].includes(status)) {
@@ -34,32 +39,30 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ message: 'Recipe request rejected' }, { status: 200 });
   }
 
-  // If approved
   try {
     const recipe = await prisma.recipe.create({
       data: {
         title: recipeRequest.title,
-        imageUrl: recipeRequest.imageUrl,
+        imageUrl: recipeRequest.imageUrl,  
         status: 'APPROVED',
-        userId: recipeRequest.userId,
-        categoryId: categoryId, // must be passed in body
+        userId: recipeRequest.userId,  
+        categoryId: categoryId,        
       },
     });
 
-   await prisma.ingredient.create({
-  data: {
-    list: recipeRequest.ingredients as Prisma.InputJsonValue,
-    recipeId: recipe.id,
-  },
-});
+    await prisma.ingredient.create({
+      data: {
+        list: recipeRequest.ingredients as Prisma.InputJsonValue,
+        recipeId: recipe.id,
+      },
+    });
 
-await prisma.instruction.create({
-  data: {
-    step: recipeRequest.instructions as Prisma.InputJsonValue,
-    recipeId: recipe.id,
-  },
-});
-
+    await prisma.instruction.create({
+      data: {
+        step: recipeRequest.instructions as Prisma.InputJsonValue,
+        recipeId: recipe.id,
+      },
+    });
 
     await prisma.recipeRequest.update({
       where: { id: requestId },

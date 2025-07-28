@@ -106,7 +106,7 @@ enum RecipeStatus {
 model RecipeRequest {
   id           Int          @id @default(autoincrement())
   title        String
-  imageUrl     Bytes
+  imageUrl     String?
   instructions Json
   ingredients  Json        
   status       RecipeStatus @default(PENDING)
