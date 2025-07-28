@@ -3,75 +3,48 @@ import { prisma } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/getuser';
 
-export async function PUT(request: NextRequest, context: { params: { id: string } }) {
-  const id  = parseInt(context.params.id);
-  const user = await getUserFromRequest(request);
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const recipeRequestId = parseInt(params.id);
+    if (isNaN(recipeRequestId)) {
+      return NextResponse.json({ error: 'Invalid recipe request ID' }, { status: 400 });
+    }
 
-  if (!user || !user.isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+    const body = await req.json();
+    const { categoryId } = body;
 
-  const requestId = parseInt(id);
-  if (isNaN(requestId)) {
-    return NextResponse.json({ error: 'Invalid request id' }, { status: 400 });
-  }
+    if (!categoryId) {
+      return NextResponse.json({ error: 'categoryId is required' }, { status: 400 });
+    }
 
-  const { status, categoryId } = await request.json();
-
-  if (!['APPROVED', 'REJECTED'].includes(status)) {
-    return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-  }
-
-  const recipeRequest = await prisma.recipeRequest.findUnique({
-    where: { id: requestId },
-  });
-
-  if (!recipeRequest) {
-    return NextResponse.json({ error: 'Recipe request not found' }, { status: 404 });
-  }
-
-  if (status === 'REJECTED') {
-    await prisma.recipeRequest.update({
-      where: { id: requestId },
-      data: { status: 'REJECTED' },
+    // Get recipe request
+    const recipeRequest = await prisma.recipeRequest.findUnique({
+      where: { id: recipeRequestId },
     });
 
-    return NextResponse.json({ message: 'Recipe request rejected' }, { status: 200 });
-  }
+    if (!recipeRequest) {
+      return NextResponse.json({ error: 'Recipe request not found' }, { status: 404 });
+    }
 
-  try {
+    // Create the recipe
     const recipe = await prisma.recipe.create({
       data: {
         title: recipeRequest.title,
-        imageUrl: recipeRequest.imageUrl as string,  
+        imageUrl: recipeRequest.imageUrl,
         status: 'APPROVED',
-        userId: recipeRequest.userId,  
-        categoryId: categoryId,        
+        userId: recipeRequest.userId,
+        categoryId: categoryId,
       },
     });
 
-    await prisma.ingredient.create({
-      data: {
-        list: recipeRequest.ingredients as Prisma.InputJsonValue,
-        recipeId: recipe.id,
-      },
+    // Delete the original request
+    await prisma.recipeRequest.delete({
+      where: { id: recipeRequestId },
     });
 
-    await prisma.instruction.create({
-      data: {
-        step: recipeRequest.instructions as Prisma.InputJsonValue,
-        recipeId: recipe.id,
-      },
-    });
-
-    await prisma.recipeRequest.update({
-      where: { id: requestId },
-      data: { status: 'APPROVED' },
-    });
-
-    return NextResponse.json({ message: 'Recipe approved and created successfully' }, { status: 201 });
+    return NextResponse.json({ message: 'Recipe approved and created', recipe });
   } catch (error) {
-    console.error('Error approving recipe:', error);
-    return NextResponse.json({ error: 'Failed to approve recipe' }, { status: 500 });
+    console.error('Error in approving recipe:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
