@@ -43,7 +43,7 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
     const recipe = await prisma.recipe.create({
       data: {
         title: recipeRequest.title,
-        imageUrl: recipeRequest.imageUrl,  
+        imageUrl: recipeRequest.imageUrl as string,  
         status: 'APPROVED',
         userId: recipeRequest.userId,  
         categoryId: categoryId,        
