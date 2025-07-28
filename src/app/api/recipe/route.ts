@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     const recipes = await prisma.recipe.findMany({
       where: {
         status: 'APPROVED',
-        ...(category ? { category: { name: category } } : {}),
+        ...(category ? { category: { name: category } } : {})
       },
       select: {
         id: true,
