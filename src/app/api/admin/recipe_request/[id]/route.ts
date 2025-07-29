@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/getuser';
 
+
 export async function PUT(request: Request) {
 
   const url = new URL(request.url);
