@@ -1,17 +1,20 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromRequest } from '@/lib/getuser'; 
+import { NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/getuser';
 
-export async function PUT(request: NextRequest, context: {params: { id: string } }) {
-  const {id} = context.params
+export async function PUT(request: Request) {
+  // Extract id from URL
+  const url = new URL(request.url);
+  const id = url.pathname.split('/').pop();
+  const requestId = parseInt(id || '');
+
   const user = await getUserFromRequest(request);
 
   if (!user || !user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const requestId = parseInt(id);
   const { status, categoryId } = await request.json();
 
   if (!['APPROVED', 'REJECTED'].includes(status)) {
@@ -43,24 +46,23 @@ export async function PUT(request: NextRequest, context: {params: { id: string }
         imageUrl: recipeRequest.imageUrl,
         status: 'APPROVED',
         userId: recipeRequest.userId,
-        categoryId: categoryId, // must be passed in body
+        categoryId: categoryId,
       },
     });
 
-   await prisma.ingredient.create({
-  data: {
-    list: recipeRequest.ingredients as Prisma.InputJsonValue,
-    recipeId: recipe.id,
-  },
-});
+    await prisma.ingredient.create({
+      data: {
+        list: recipeRequest.ingredients as Prisma.InputJsonValue,
+        recipeId: recipe.id,
+      },
+    });
 
-await prisma.instruction.create({
-  data: {
-    step: recipeRequest.instructions as Prisma.InputJsonValue,
-    recipeId: recipe.id,
-  },
-});
-
+    await prisma.instruction.create({
+      data: {
+        step: recipeRequest.instructions as Prisma.InputJsonValue,
+        recipeId: recipe.id,
+      },
+    });
 
     await prisma.recipeRequest.update({
       where: { id: requestId },
@@ -72,4 +74,4 @@ await prisma.instruction.create({
     console.error('Error approving recipe:', error);
     return NextResponse.json({ error: 'Failed to approve recipe' }, { status: 500 });
   }
-}   
+}
