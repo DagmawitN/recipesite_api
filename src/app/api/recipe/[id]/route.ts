@@ -1,11 +1,15 @@
 import { prisma } from '@/lib/db';
-import {  NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(
-  req: Request,
-  context: { params: { id: string } }
-) {
-  const recipeId = context.params.id;
+export async function GET(req: Request) {
+  // Extract recipe id from URL
+  const url = new URL(req.url);
+  const id = url.pathname.split('/').pop();
+  const recipeId = parseInt(id || '');
+
+  if (isNaN(recipeId)) {
+    return NextResponse.json({ error: 'Invalid recipe ID' }, { status: 400 });
+  }
 
   try {
     const recipe = await prisma.recipe.findUnique({
