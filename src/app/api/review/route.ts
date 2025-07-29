@@ -1,24 +1,22 @@
 import { prisma } from '@/lib/db';
-import {  NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function POST(
-  req: Request,
-  context: { params: { id: string } }
-) {
-  const recipeId = parseInt(context.params.id, 10);
-
-
+export async function POST(req: Request) {
   let body;
   try {
     body = await req.json();
-  } catch  {
+  } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { comment, rating, userId } = body;
+  const { comment, rating, userId, recipeId } = body;
 
-  if (!comment || !rating || !userId) {
+  if (!comment || !rating || !userId || !recipeId) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  }
+
+  if (isNaN(Number(recipeId))) {
+    return NextResponse.json({ error: 'Invalid recipe ID' }, { status: 400 });
   }
 
   try {
@@ -27,7 +25,7 @@ export async function POST(
         comment,
         rating,
         userId,
-        recipeId,
+        recipeId: Number(recipeId),
       },
     });
 
