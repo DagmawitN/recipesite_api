@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/getuser';
 
 export async function PUT(request: Request) {
-  // Extract id from URL
+
   const url = new URL(request.url);
   const id = url.pathname.split('/').pop();
   const requestId = parseInt(id || '');
@@ -38,7 +38,6 @@ export async function PUT(request: Request) {
     return NextResponse.json({ message: 'Recipe request rejected' }, { status: 200 });
   }
 
-  // If approved
   try {
     const recipe = await prisma.recipe.create({
       data: {
@@ -49,20 +48,19 @@ export async function PUT(request: Request) {
         categoryId: categoryId,
       },
     });
+await prisma.ingredient.create({
+  data: {
+    list: recipeRequest.ingredients as Prisma.InputJsonValue,
+    recipeId: recipe.id,
+  },
+});
 
-    await prisma.ingredient.create({
-      data: {
-        list: recipeRequest.ingredients as Prisma.InputJsonValue,
-        recipeId: recipe.id,
-      },
-    });
-
-    await prisma.instruction.create({
-      data: {
-        step: recipeRequest.instructions as Prisma.InputJsonValue,
-        recipeId: recipe.id,
-      },
-    });
+await prisma.instruction.create({
+  data: {
+    step: recipeRequest.instructions as Prisma.InputJsonValue,
+    recipeId: recipe.id,
+  },
+});
 
     await prisma.recipeRequest.update({
       where: { id: requestId },

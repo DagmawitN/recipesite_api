@@ -5,7 +5,8 @@ export async function POST(
   req: Request,
   context: { params: { id: string } }
 ) {
-  const recipeId = context.params.id;
+  const recipeId = parseInt(context.params.id, 10);
+
 
   let body;
   try {
