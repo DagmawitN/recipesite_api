@@ -1,14 +1,15 @@
 import { prisma } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withCors, handleOptions } from '@/lib/cors';
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const id = url.pathname.split('/').pop();
     const userId = parseInt(id || '');
 
     if (isNaN(userId)) {
-      return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+      return withCors(req, NextResponse.json({ error: 'Invalid user ID' }, { status: 400 }));
     }
 
     const user = await prisma.user.findUnique({
@@ -42,21 +43,24 @@ export async function GET(req: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return withCors(req, NextResponse.json({ error: 'User not found' }, { status: 404 }));
     }
 
-    // Reformat favorites to extract just the recipe object
     const favorites = user.favorites.map((fav) => fav.recipe);
 
-    return NextResponse.json({
+    return withCors(req, NextResponse.json({
       id: user.id,
       email: user.email,
       name: user.name,
       postedRecipes: user.recipes,
       favoriteRecipes: favorites,
-    });
+    }));
   } catch (error) {
     console.error('[GET_USER_BY_ID_ERROR]', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return withCors(req, NextResponse.json({ error: 'Server error' }, { status: 500 }));
   }
+}
+
+export function OPTIONS(req: NextRequest) {
+  return handleOptions(req);
 }

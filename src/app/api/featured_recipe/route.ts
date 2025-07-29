@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withCors, handleOptions } from '@/lib/cors';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const featuredRecipes = await prisma.featuredRecipe.findMany({
       include: {
@@ -28,12 +29,16 @@ export async function GET() {
       averageRating: item.averageRating,
     }));
 
-    return NextResponse.json(formatted);
+    return withCors(request, NextResponse.json(formatted));
   } catch (error) {
     console.error('[FEATURED_RECIPES_FETCH_ERROR]', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch featured recipes' },
-      { status: 500 }
+    return withCors(
+      request,
+      NextResponse.json({ error: 'Failed to fetch featured recipes' }, { status: 500 })
     );
   }
+}
+
+export function OPTIONS(request: NextRequest) {
+  return handleOptions(request);
 }

@@ -1,11 +1,10 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/getuser';
+import { withCors, handleOptions } from '@/lib/cors';
 
-
-export async function PUT(request: Request) {
-
+export async function PUT(request: NextRequest) {
   const url = new URL(request.url);
   const id = url.pathname.split('/').pop();
   const requestId = parseInt(id || '');
@@ -13,13 +12,13 @@ export async function PUT(request: Request) {
   const user = await getUserFromRequest(request);
 
   if (!user || !user.isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return withCors(request, NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
   }
 
   const { status, categoryId } = await request.json();
 
   if (!['APPROVED', 'REJECTED'].includes(status)) {
-    return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    return withCors(request, NextResponse.json({ error: 'Invalid status' }, { status: 400 }));
   }
 
   const recipeRequest = await prisma.recipeRequest.findUnique({
@@ -27,7 +26,7 @@ export async function PUT(request: Request) {
   });
 
   if (!recipeRequest) {
-    return NextResponse.json({ error: 'Recipe request not found' }, { status: 404 });
+    return withCors(request, NextResponse.json({ error: 'Recipe request not found' }, { status: 404 }));
   }
 
   if (status === 'REJECTED') {
@@ -36,7 +35,7 @@ export async function PUT(request: Request) {
       data: { status: 'REJECTED' },
     });
 
-    return NextResponse.json({ message: 'Recipe request rejected' }, { status: 200 });
+    return withCors(request, NextResponse.json({ message: 'Recipe request rejected' }, { status: 200 }));
   }
 
   try {
@@ -49,28 +48,33 @@ export async function PUT(request: Request) {
         categoryId: categoryId,
       },
     });
-await prisma.ingredient.create({
-  data: {
-    list: recipeRequest.ingredients as Prisma.InputJsonValue,
-    recipeId: recipe.id,
-  },
-});
 
-await prisma.instruction.create({
-  data: {
-    step: recipeRequest.instructions as Prisma.InputJsonValue,
-    recipeId: recipe.id,
-  },
-});
+    await prisma.ingredient.create({
+      data: {
+        list: recipeRequest.ingredients as Prisma.InputJsonValue,
+        recipeId: recipe.id,
+      },
+    });
+
+    await prisma.instruction.create({
+      data: {
+        step: recipeRequest.instructions as Prisma.InputJsonValue,
+        recipeId: recipe.id,
+      },
+    });
 
     await prisma.recipeRequest.update({
       where: { id: requestId },
       data: { status: 'APPROVED' },
     });
 
-    return NextResponse.json({ message: 'Recipe approved and created successfully' }, { status: 201 });
+    return withCors(request, NextResponse.json({ message: 'Recipe approved and created successfully' }, { status: 201 }));
   } catch (error) {
     console.error('Error approving recipe:', error);
-    return NextResponse.json({ error: 'Failed to approve recipe' }, { status: 500 });
+    return withCors(request, NextResponse.json({ error: 'Failed to approve recipe' }, { status: 500 }));
   }
+}
+
+export function OPTIONS(request: NextRequest) {
+  return handleOptions(request);
 }

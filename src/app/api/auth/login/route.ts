@@ -1,9 +1,10 @@
 import { prisma } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { signToken } from '@/lib/auth';
+import { withCors, handleOptions } from '@/lib/cors';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
 
   const user = await prisma.user.findUnique({
@@ -18,17 +19,17 @@ export async function POST(request: Request) {
   });
 
   if (!user) {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    return withCors(request, NextResponse.json({ error: 'Invalid credentials' }, { status: 401 }));
   }
 
   const isValid = await bcrypt.compare(password, user.password);
   if (!isValid) {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    return withCors(request, NextResponse.json({ error: 'Invalid credentials' }, { status: 401 }));
   }
 
   const token = signToken({ id: user.id, email: user.email, isAdmin: user.isAdmin });
 
-  return NextResponse.json({
+  return withCors(request, NextResponse.json({
     message: 'Login successful',
     user: {
       id: user.id,
@@ -37,5 +38,9 @@ export async function POST(request: Request) {
       isAdmin: user.isAdmin, 
     },
     token,
-  });
+  }));
+}
+
+export function OPTIONS(request: NextRequest) {
+  return handleOptions(request);
 }
