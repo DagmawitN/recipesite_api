@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { getUserFromRequest } from '@/lib/getuser';
 import { withCors, handleOptions } from '@/lib/cors';
 
@@ -11,7 +11,6 @@ export async function POST(request: NextRequest) {
     const { recipeId } = await request.json();
     if (!recipeId) return withCors(request, NextResponse.json({ error: 'Missing recipeId' }, { status: 400 }));
 
-    // Check if already favorited
     const existing = await prisma.favorite.findUnique({
       where: {
         userId_recipeId: {
@@ -75,13 +74,12 @@ export async function DELETE(request: NextRequest) {
     return withCors(request, NextResponse.json({ message: 'Unfavorited' }));
   } catch (error) {
     console.error('Error in DELETE /api/favourite:', error);
-    return withCors(request, NextResponse.json(
-      { error: 'Internal Server Error', details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    ));
+    return withCors(request, NextResponse.json({
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : String(error),
+    }, { status: 500 }));
   }
 }
-
 export function OPTIONS(request: NextRequest) {
-  return handleOptions(request);
+  return handleOptions(request); 
 }
