@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const allowedOrigin = 'https://balemuya-recipesite.vercel.app/'; 
+const allowedOrigin = 'https://balemuya-recipesite.vercel.app'; 
 
 export function withCors(req: NextRequest, res: NextResponse) {
   const newRes = res.clone();
