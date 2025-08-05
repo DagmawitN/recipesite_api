@@ -10,9 +10,11 @@ export async function POST(request: NextRequest) {
       return withCors(request, NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
     }
 
-    const { recipeId } = await request.json();
-    if (!recipeId) {
-      return withCors(request, NextResponse.json({ error: 'Missing recipeId' }, { status: 400 }));
+    const body = await request.json();
+    const recipeId = Number(body.recipeId);
+
+    if (!recipeId || isNaN(recipeId)) {
+      return withCors(request, NextResponse.json({ error: 'Invalid recipeId' }, { status: 400 }));
     }
 
     const existing = await prisma.favorite.findUnique({
@@ -38,7 +40,10 @@ export async function POST(request: NextRequest) {
     return withCors(request, NextResponse.json({ message: 'Favorited', favorite }));
   } catch (error) {
     console.error('Error in POST /api/favourite:', error);
-    return withCors(request, NextResponse.json({ error: 'Internal Server Error' }, { status: 500 }));
+    return withCors(
+      request,
+      NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
+    );
   }
 }
 
@@ -51,12 +56,18 @@ export async function GET(request: NextRequest) {
 
     const favorites = await prisma.favorite.findMany({
       where: { userId: user.id },
+      include: {
+        recipe: true, 
+      },
     });
 
     return withCors(request, NextResponse.json(favorites));
   } catch (error) {
     console.error('Error in GET /api/favourite:', error);
-    return withCors(request, NextResponse.json({ error: 'Internal Server Error' }, { status: 500 }));
+    return withCors(
+      request,
+      NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
+    );
   }
 }
 
@@ -67,9 +78,11 @@ export async function DELETE(request: NextRequest) {
       return withCors(request, NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
     }
 
-    const { recipeId } = await request.json();
-    if (!recipeId) {
-      return withCors(request, NextResponse.json({ error: 'Missing recipeId' }, { status: 400 }));
+    const body = await request.json();
+    const recipeId = Number(body.recipeId);
+
+    if (!recipeId || isNaN(recipeId)) {
+      return withCors(request, NextResponse.json({ error: 'Invalid recipeId' }, { status: 400 }));
     }
 
     await prisma.favorite.delete({
@@ -84,10 +97,10 @@ export async function DELETE(request: NextRequest) {
     return withCors(request, NextResponse.json({ message: 'Unfavorited' }));
   } catch (error) {
     console.error('Error in DELETE /api/favourite:', error);
-    return withCors(request, NextResponse.json({
-      error: 'Internal Server Error',
-      details: error instanceof Error ? error.message : String(error),
-    }, { status: 500 }));
+    return withCors(
+      request,
+      NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
+    );
   }
 }
 
